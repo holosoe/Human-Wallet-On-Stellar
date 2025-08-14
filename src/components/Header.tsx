@@ -185,6 +185,11 @@ const Header = () => {
               className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
               Human Wallet
             </Link>
+            <Link
+              href='/stellar'
+              className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
+              Stellar
+            </Link>
           </div>
         </nav>
       </div>
@@ -217,6 +222,11 @@ const Header = () => {
               href='/human-wallet'
               className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
               Human Wallet
+            </Link>
+            <Link
+              href='/stellar'
+              className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
+              Stellar
             </Link>
           </div>
         </nav>
