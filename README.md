@@ -1,3 +1,9 @@
+# Human Wallet On Stellar
+
+Please refer to [`stellar` branch](https://github.com/holosoe/Human-Wallet-On-Stellar/tree/stellar) of this repo for the on-going work.
+
+Work-in-progress documentation is [accessible here](https://docs.google.com/document/d/1hoeo0HDstiABZua-FJJlE8AUoPmqkQPSJgEM2ez8UgQ/edit?usp=sharing).
+
 # Human.tech Passport Verification App
 
 A Next.js application that integrates with Human Passport and Human Wallet to verify human identity and provide a seamless Web3 authentication experience.
