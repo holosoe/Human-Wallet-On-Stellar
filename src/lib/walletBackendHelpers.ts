@@ -34,14 +34,16 @@ export async function sendTxWithFeeBump(params: {
   }
   const feeBumpXdr: string = fbJson.transaction;
 
-  const res = await fetch(`${rpcUrl}/transactions`, {
+  // Submit fee-bump to Horizon (not Soroban RPC)
+  const horizonUrl = process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org";
+  const res = await fetch(`${horizonUrl}/transactions`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ tx: feeBumpXdr }),
   });
-  const json = (await res.json()) as { hash?: string };
-  if (!json.hash) throw new Error(`Submission failed: ${JSON.stringify(json)}`);
-  return { hash: json.hash };
+  const json = (await res.json()) as { hash?: string; successful?: boolean };
+  if (!json.hash && !json.successful) throw new Error(`Submission failed: ${JSON.stringify(json)}`);
+  return { hash: json.hash || "" };
 }
 
 export interface ContractInteractionConfig {
