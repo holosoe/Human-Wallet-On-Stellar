@@ -1,6 +1,6 @@
 import { silkConfig } from '@/config'
 import { showToast } from '@/utils/toast'
-import { initSilk, SILK_METHOD } from '@silk-wallet/silk-wallet-sdk'
+import { initWaaP, SILK_METHOD } from '@human.tech/waap-sdk'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -62,7 +62,7 @@ export const humanWalletStore = create<HumanWalletState>((set, get) => ({
 
   initializeHumanWallet: () => {
     try {
-      initSilk(silkConfig)
+      initWaaP(silkConfig)
 
       const { getAccount, getChainId, switchChain, getLoginMethod } = get()
 

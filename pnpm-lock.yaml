@@ -8,12 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@human.tech/waap-sdk':
+        specifier: ^1.0.3
+        version: 1.0.3(@ethersproject/sha2@5.8.0)(@types/react@19.1.10)(bufferutil@4.0.9)(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)
       '@passportxyz/passport-embed':
         specifier: ^0.1.5
         version: 0.1.5(@types/react@19.1.10)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      '@silk-wallet/silk-wallet-sdk':
-        specifier: ^0.7.1
-        version: 0.7.1(@ethersproject/sha2@5.8.0)(@types/react@19.1.10)(bufferutil@4.0.9)(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)
       '@stellar/stellar-sdk':
         specifier: ^11.3.0
         version: 11.3.0
@@ -253,6 +253,18 @@ packages:
     resolution: {integrity: sha512-97Ktv+vZszADHdu6hS/B5tRfOqebwGNyD2Pfvmo1kK8d54UsNZtC22D8LJEueXqgVbq5PeSn0jv88uav3t1fHg==}
     peerDependencies:
       viem: '>=2.0.0'
+
+  '@human.tech/waap-constants@0.0.2':
+    resolution: {integrity: sha512-SHyB2C0/OUJuy9MGWlDM/JiecuSA0wpNGc1rBc1f9O16nlc9B7W9D7KQ1BTnx2GtLJEz7rzmqbNeAZdmFT3OVw==}
+    engines: {node: '>=18.0.0'}
+
+  '@human.tech/waap-interface-core@0.1.1':
+    resolution: {integrity: sha512-zCfcwSND8WCIS8RaQaK4zPoGep/LX4ZGTHtpaXMkxVTdXZZxkl5NjXeVPqrq9IcfZWuGI41rpwDRuyNPFM+OZQ==}
+    engines: {node: '>=18.0.0'}
+
+  '@human.tech/waap-sdk@1.0.3':
+    resolution: {integrity: sha512-MKJO6t/Gb/7xjvzTKJYVgjWBJqjhODRArbPZ+fU5Gdg0BT9N9lt53BGv1qtXbDswriYZeCOxTapF7gXDT1ugDw==}
+    engines: {node: '>=18.0.0'}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -770,18 +782,6 @@ packages:
   '@scure/bip39@1.6.0':
     resolution: {integrity: sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A==}
 
-  '@silk-wallet/silk-constants@0.3.2':
-    resolution: {integrity: sha512-0Tf+q19iIIgb4DxbGlysAvWiJd0EUj0W9I+GRVDwfeSik6T5YmRtUR5EsJDOulHKhvhdNqWNGezBRd6Av11Dqw==}
-    engines: {node: '>=18.0.0'}
-
-  '@silk-wallet/silk-interface-core@0.4.2':
-    resolution: {integrity: sha512-SoFDdVC4OThFRoXuKcZJYJ6WV/T1GsW1XlKPZ6NJnxzthnbhXq1YJ7HyqgRMxSvGGSLMzMzOuiB0eBsNSMuEXQ==}
-    engines: {node: '>=18.0.0'}
-
-  '@silk-wallet/silk-wallet-sdk@0.7.1':
-    resolution: {integrity: sha512-Wx8BEUL1aPR943+JMU8dxcw7BW3io3TOC/4+0WHvOB7l6Wnj8JDyDYwHK0A43TO50HT4kQNqVZlRvVeC4fsfLw==}
-    engines: {node: '>=18.0.0'}
-
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
 
@@ -1197,6 +1197,7 @@ packages:
 
   '@walletconnect/sign-client@2.21.5':
     resolution: {integrity: sha512-IAs/IqmE1HVL9EsvqkNRU4NeAYe//h9NwqKi7ToKYZv4jhcC3BBemUD1r8iQJSTHMhO41EKn1G9/DiBln3ZiwQ==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/time@1.0.2':
     resolution: {integrity: sha512-uzdd9woDcJ1AaBZRhqy5rNC9laqWGErfc4dxA9a87mPdKOgWMD85mcFo9dIYIts/Jwocfwn07EC6EzclKubk/g==}
@@ -1218,6 +1219,7 @@ packages:
 
   '@walletconnect/universal-provider@2.21.5':
     resolution: {integrity: sha512-SMXGGXyj78c8Ru2f665ZFZU24phn0yZyCP5Ej7goxVQxABwqWKM/odj3j/IxZv+hxA8yU13yxaubgVefnereqw==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/utils@2.21.0':
     resolution: {integrity: sha512-zfHLiUoBrQ8rP57HTPXW7rQMnYxYI4gT9yTACxVW6LhIFROTF6/ytm5SKNoIvi4a5nX5dfXG4D9XwQUCu8Ilig==}
@@ -1615,6 +1617,9 @@ packages:
   crossws@0.3.5:
     resolution: {integrity: sha512-ojKiDvcmByhwa8YYqbQI/hg7MEU0NC03+pSdEq4ZUnZR9xXpwk7E43SMNGkn+JxJGPFtNvQ48+vV2p+P1ml5PA==}
 
+  crypto-js@4.2.0:
+    resolution: {integrity: sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==}
+
   css-color-keywords@1.0.0:
     resolution: {integrity: sha512-FyyrDHZKEjXDpNJYvVsV960FiqQyXc/LlYmsxl2BcdMb2WPx0OGRVgTg55rPSyLSNMqP52R9r8geSp7apN3Ofg==}
     engines: {node: '>=4'}
@@ -1997,6 +2002,10 @@ packages:
 
   ethers@6.15.0:
     resolution: {integrity: sha512-Kf/3ZW54L4UT0pZtsY/rf+EkBU7Qi5nnhonjUb8yTXcxH3cdcWrV2cRyk0Xk/4jK6OoHhxxZHriyhje20If2hQ==}
+    engines: {node: '>=14.0.0'}
+
+  ethers@6.16.0:
+    resolution: {integrity: sha512-U1wulmetNymijEhpSEQ7Ct/P/Jw9/e7R1j5XIbPRydgV2DjLVMsULDlNksq3RQnFgKoLlZf88ijYtWEXcPa07A==}
     engines: {node: '>=14.0.0'}
 
   event-target-shim@5.0.1:
@@ -4043,6 +4052,55 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@human.tech/waap-constants@0.0.2':
+    dependencies:
+      '@human.tech/waap-interface-core': 0.1.1
+
+  '@human.tech/waap-interface-core@0.1.1':
+    dependencies:
+      crypto-js: 4.2.0
+
+  '@human.tech/waap-sdk@1.0.3(@ethersproject/sha2@5.8.0)(@types/react@19.1.10)(bufferutil@4.0.9)(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@human.tech/waap-constants': 0.0.2
+      '@human.tech/waap-interface-core': 0.1.1
+      '@metamask/rpc-errors': 5.1.1
+      '@reown/appkit': 1.7.19(@types/react@19.1.10)(bufferutil@4.0.9)(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      '@reown/appkit-adapter-ethers': 1.7.19(@ethersproject/sha2@5.8.0)(@types/react@19.1.10)(bufferutil@4.0.9)(ethers@6.16.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
+      ethers: 6.16.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      events: 3.3.0
+      pino-pretty: 10.3.1
+      zod: 3.25.76
+      zod-validation-error: 1.5.0(zod@3.25.76)
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@ethersproject/sha2'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@react-native-async-storage/async-storage'
+      - '@types/react'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/kv'
+      - aws4fetch
+      - bufferutil
+      - db0
+      - encoding
+      - ioredis
+      - lit
+      - react
+      - supports-color
+      - typescript
+      - uploadthing
+      - utf-8-validate
+
   '@humanfs/core@0.19.1': {}
 
   '@humanfs/node@0.16.6':
@@ -4478,7 +4536,7 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@reown/appkit-adapter-ethers@1.7.19(@ethersproject/sha2@5.8.0)(@types/react@19.1.10)(bufferutil@4.0.9)(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
+  '@reown/appkit-adapter-ethers@1.7.19(@ethersproject/sha2@5.8.0)(@types/react@19.1.10)(bufferutil@4.0.9)(ethers@6.16.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)':
     dependencies:
       '@ethersproject/sha2': 5.8.0
       '@reown/appkit': 1.7.19(@types/react@19.1.10)(bufferutil@4.0.9)(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
@@ -4489,7 +4547,7 @@ snapshots:
       '@reown/appkit-utils': 1.7.19(@types/react@19.1.10)(bufferutil@4.0.9)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(valtio@2.1.5(@types/react@19.1.10)(react@19.1.1))(zod@3.25.76)
       '@reown/appkit-wallet': 1.7.19(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)
       '@walletconnect/universal-provider': 2.21.5(bufferutil@4.0.9)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
-      ethers: 6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+      ethers: 6.16.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       valtio: 2.1.5(@types/react@19.1.10)(react@19.1.1)
     optionalDependencies:
       '@coinbase/wallet-sdk': 4.3.0
@@ -5141,53 +5199,6 @@ snapshots:
     dependencies:
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
-
-  '@silk-wallet/silk-constants@0.3.2':
-    dependencies:
-      '@silk-wallet/silk-interface-core': 0.4.2
-
-  '@silk-wallet/silk-interface-core@0.4.2': {}
-
-  '@silk-wallet/silk-wallet-sdk@0.7.1(@ethersproject/sha2@5.8.0)(@types/react@19.1.10)(bufferutil@4.0.9)(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@metamask/rpc-errors': 5.1.1
-      '@reown/appkit': 1.7.19(@types/react@19.1.10)(bufferutil@4.0.9)(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
-      '@reown/appkit-adapter-ethers': 1.7.19(@ethersproject/sha2@5.8.0)(@types/react@19.1.10)(bufferutil@4.0.9)(ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(lit@3.3.0)(react@19.1.1)(typescript@5.9.2)(utf-8-validate@5.0.10)(zod@3.25.76)
-      '@silk-wallet/silk-constants': 0.3.2
-      '@silk-wallet/silk-interface-core': 0.4.2
-      events: 3.3.0
-      pino-pretty: 10.3.1
-      zod: 3.25.76
-      zod-validation-error: 1.5.0(zod@3.25.76)
-    transitivePeerDependencies:
-      - '@azure/app-configuration'
-      - '@azure/cosmos'
-      - '@azure/data-tables'
-      - '@azure/identity'
-      - '@azure/keyvault-secrets'
-      - '@azure/storage-blob'
-      - '@capacitor/preferences'
-      - '@deno/kv'
-      - '@ethersproject/sha2'
-      - '@netlify/blobs'
-      - '@planetscale/database'
-      - '@react-native-async-storage/async-storage'
-      - '@types/react'
-      - '@upstash/redis'
-      - '@vercel/blob'
-      - '@vercel/kv'
-      - aws4fetch
-      - bufferutil
-      - db0
-      - encoding
-      - ethers
-      - ioredis
-      - lit
-      - react
-      - supports-color
-      - typescript
-      - uploadthing
-      - utf-8-validate
 
   '@socket.io/component-emitter@3.1.2': {}
 
@@ -6749,6 +6760,8 @@ snapshots:
     dependencies:
       uncrypto: 0.1.3
 
+  crypto-js@4.2.0: {}
+
   css-color-keywords@1.0.0: {}
 
   css-to-react-native@3.2.0:
@@ -7293,6 +7306,19 @@ snapshots:
       '@scure/bip39': 1.3.0
 
   ethers@6.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10):
+    dependencies:
+      '@adraffy/ens-normalize': 1.10.1
+      '@noble/curves': 1.2.0
+      '@noble/hashes': 1.3.2
+      '@types/node': 22.7.5
+      aes-js: 4.0.0-beta.5
+      tslib: 2.7.0
+      ws: 8.17.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+
+  ethers@6.16.0(bufferutil@4.0.9)(utf-8-validate@5.0.10):
     dependencies:
       '@adraffy/ens-normalize': 1.10.1
       '@noble/curves': 1.2.0
@@ -8106,7 +8132,7 @@ snapshots:
     dependencies:
       '@adraffy/ens-normalize': 1.11.0
       '@noble/ciphers': 1.3.0
-      '@noble/curves': 1.9.2
+      '@noble/curves': 1.9.6
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
@@ -8121,7 +8147,7 @@ snapshots:
     dependencies:
       '@adraffy/ens-normalize': 1.11.0
       '@noble/ciphers': 1.3.0
-      '@noble/curves': 1.9.2
+      '@noble/curves': 1.9.6
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0

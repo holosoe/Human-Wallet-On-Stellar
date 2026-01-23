@@ -1,4 +1,4 @@
-import { InitSilkOptions } from '@silk-wallet/silk-wallet-sdk'
+import { InitSilkOptions, InitWaaPOptions } from '@human.tech/waap-sdk'
 
 export const passportApiKey = process.env.NEXT_PUBLIC_API_KEY
 export const passportScorerId = process.env.NEXT_PUBLIC_SCORER_ID
@@ -7,12 +7,11 @@ export const passportScoreThreshold = 25
 export const useStagingSilk = false
 
 export const silkUrl = useStagingSilk
-  ? 'https://staging-silkysignon.com/'
-  : 'https://humansignon.com/'
+  ? 'https://staging.waap.xyz/'
+  : 'https://waap.xyz/'
 
-export const silkConfig: InitSilkOptions = {
+export const silkConfig: InitWaaPOptions = {
   // useStaging: true,
-  useProd: true,
   config: {
     // darkMode: false,
     allowedSocials: ['google', 'twitter', 'discord', 'github'],
@@ -22,7 +21,7 @@ export const silkConfig: InitSilkOptions = {
     },
   },
   project: {
-    entryTitle: 'Welcome Human',
+    entryTitle: 'WaaP on Stellar',
   },
   walletConnectProjectId:
     process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '',
