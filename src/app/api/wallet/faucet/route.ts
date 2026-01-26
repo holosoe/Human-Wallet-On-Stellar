@@ -36,7 +36,11 @@ export async function POST(request: NextRequest) {
     const faucetPublicKey = process.env.NEXT_PUBLIC_FAUCET_PUBLIC_KEY;
     const rpcUrl = process.env.NEXT_PUBLIC_STELLAR_RPC_URL;
     const networkPassphrase = process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE;
-    const nativeContractId = "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC";
+    // Native XLM Stellar Asset Contract IDs per network
+    const isMainnet = networkPassphrase === "Public Global Stellar Network ; September 2015";
+    const nativeContractId = isMainnet 
+      ? "CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA"  // Mainnet XLM SAC
+      : "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"; // Testnet XLM SAC
 
     if (!faucetPrivateKey || !faucetPublicKey || !rpcUrl || !networkPassphrase) {
       console.error('Missing environment variables for faucet');
@@ -46,7 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`Faucet request: Sending 10 XLM to ${recipientAddress}`);
+    console.log(`Faucet request: Sending 0.00001 XLM to ${recipientAddress}`);
 
     // Step 1: Build transaction locally
     console.log("Step 1: Building faucet transaction locally...");
@@ -54,7 +58,7 @@ export async function POST(request: NextRequest) {
     const sourceAccount = await rpc.getAccount(faucetPublicKey);
     
     const tx = new TransactionBuilder(sourceAccount, {
-      fee: '100',
+      fee: '10000000', // 1 XLM base fee to ensure mainnet acceptance
       networkPassphrase: networkPassphrase
     })
       .addOperation(Operation.invokeContractFunction({
@@ -64,7 +68,7 @@ export async function POST(request: NextRequest) {
           Address.fromString(faucetPublicKey).toScVal(), // from: faucet account
           Address.fromString(recipientAddress).toScVal(), // to: recipient address
           xdr.ScVal.scvI128(new xdr.Int128Parts({ 
-            lo: xdr.Uint64.fromString((10 * 10_000_000).toString()), // 10 XLM in stroops
+            lo: xdr.Uint64.fromString('100'), // 0.00001 XLM = 100 stroops
             hi: xdr.Int64.fromString('0') 
           }))
         ]
