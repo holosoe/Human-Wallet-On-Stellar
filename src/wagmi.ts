@@ -6,9 +6,6 @@ export const config = createConfig({
   chains: [sepolia, mainnet, optimism, zksync, polygon, gnosis, baseSepolia],
   connectors: [
     injected(),
-    walletConnect({
-      projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "",
-    }),
   ],
   transports: {
     [sepolia.id]: http(),

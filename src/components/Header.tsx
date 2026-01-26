@@ -175,20 +175,20 @@ const Header = () => {
         </div>
         <nav className='flex justify-center pb-2'>
           <div className='flex gap-4 items-center'>
-            <Link
+            {/* <Link
               href='/'
               className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
               Human Passport
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               href='/human-wallet'
               className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
               Human Wallet
-            </Link>
+            </Link> */}
             <Link
               href='/stellar'
               className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
-              Stellar
+              WaaP on Stellar
             </Link>
           </div>
         </nav>
@@ -213,20 +213,20 @@ const Header = () => {
         {/* Navigation Links - Center */}
         <nav className='flex justify-center'>
           <div className='flex gap-6 items-center'>
-            <Link
+            {/* <Link
               href='/'
               className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
               Human Passport
-            </Link>
-            <Link
+            </Link> */}
+            {/* <Link
               href='/human-wallet'
               className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
               Human Wallet
-            </Link>
+            </Link> */}
             <Link
               href='/stellar'
               className='text-sm font-medium text-gray-700 hover:text-black transition-colors duration-200'>
-              Stellar
+              WaaP on Stellar
             </Link>
           </div>
         </nav>

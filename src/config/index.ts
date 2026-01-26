@@ -15,14 +15,12 @@ export const silkConfig: InitWaaPOptions = {
   config: {
     // darkMode: false,
     allowedSocials: ['google', 'twitter', 'discord', 'github'],
-    authenticationMethods: ['email', 'phone', 'wallet', 'social'],
+    authenticationMethods: ['email', 'phone', 'social'],
     styles: {
       darkMode: false,
     },
   },
   project: {
     entryTitle: 'WaaP on Stellar',
-  },
-  walletConnectProjectId:
-    process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || '',
+  }
 }

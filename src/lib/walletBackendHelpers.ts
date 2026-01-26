@@ -34,8 +34,11 @@ export async function sendTxWithFeeBump(params: {
   }
   const feeBumpXdr: string = fbJson.transaction;
 
-  // Submit fee-bump to Horizon (not Soroban RPC)
-  const horizonUrl = process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL || "https://horizon-testnet.stellar.org";
+  // Submit fee-bump to Horizon
+  const horizonUrl = process.env.NEXT_PUBLIC_STELLAR_HORIZON_URL;
+  if (!horizonUrl) {
+    throw new Error("NEXT_PUBLIC_STELLAR_HORIZON_URL environment variable is required");
+  }
   const res = await fetch(`${horizonUrl}/transactions`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },

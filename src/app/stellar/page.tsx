@@ -508,7 +508,7 @@ export default function HumanWalletPage() {
               </span>
             </div>
 
-            {isConnected && (
+            {/* {isConnected && (
               <>
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Address:</span>
@@ -532,7 +532,7 @@ export default function HumanWalletPage() {
                   </div>
                 )}
               </>
-            )}
+            )} */}
           </div>
         </motion.div>
 
@@ -544,7 +544,7 @@ export default function HumanWalletPage() {
           transition={{ duration: 0.6, delay: 0.2 }}
         >
           <h2 className="text-[20px] font-semibold mb-4">
-            Human Wallet 🤝 Stellar
+            WaaP 🤝 Stellar
           </h2>
 
           {!isConnected ? (
@@ -554,7 +554,7 @@ export default function HumanWalletPage() {
               whileHover={{ backgroundColor: "#333", scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              Connect Human Wallet
+              Connect with WaaP
             </motion.button>
           ) : (
             <div className="space-y-4">
@@ -756,7 +756,7 @@ export default function HumanWalletPage() {
                           >
                             {isRequestingFaucet
                               ? "Requesting..."
-                              : "Request 10 XLM"}
+                              : "Request 0.00001 XLM"}
                           </motion.button>
 
                           <motion.button
@@ -778,7 +778,7 @@ export default function HumanWalletPage() {
                               ? "Signing..."
                               : isSendingXLM
                                 ? "Sending..."
-                                : "Send 0.1 XLM"}
+                                : "Send 0.00001 XLM"}
                           </motion.button>
                         </div>
 
