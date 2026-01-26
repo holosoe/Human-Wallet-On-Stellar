@@ -1,187 +1,134 @@
-# Human Wallet On Stellar
+# WaaP on Stellar
 
 Please refer to [`stellar` branch](https://github.com/holosoe/Human-Wallet-On-Stellar/tree/stellar) of this repo for the on-going work.
 
 Work-in-progress documentation is [accessible here](https://docs.google.com/document/d/1hoeo0HDstiABZua-FJJlE8AUoPmqkQPSJgEM2ez8UgQ/edit?usp=sharing).
 
-# Human.tech Passport Verification App
+## Embedded wallet experience
 
-A Next.js application that integrates with Human Passport and Human Wallet to verify human identity and provide a seamless Web3 authentication experience.
+WaaP offers an embedded wallet experience to seamlessly onboard users to Stellar.
 
-## Overview
+WaaP removes complexities and UX frictions of activating wallets for users while ensuring self-custody and security with 2PC technology.
 
-This application allows users to:
-- Connect with Human Wallet (Human.tech's wallet solution)
-- Verify their humanity through Human Passport scores
-- Access human-verified features and services
-- Switch between different Ethereum networks
+WaaP can be integrated via a few lines of code. More info here: https://docs.waap.xyz
+
+## WaaP 🤝 Stellar
+
+Via WaaP, users can deploy a smart contract wallet on Stellar accessing the tools and services in the Stellar ecosystem.
 
 ## Features
 
-- **Human Passport Integration**: Verify human identity using Human Passport scores
-- **Human Wallet Support**: Seamless integration with Human.tech's Human Wallet SDK
-- **Multi-chain Support**: Connect to different Ethereum networks
-- **Responsive Design**: Mobile-first design with beautiful animations
-- **Real-time Updates**: Live passport score updates and verification status
+- **ECDSA Secp256k1 Smart Contract Wallet**: Deploy Soroban smart contract wallets using existing Ethereum keys
+- **Gasless Transactions**: Users don't need XLM to interact with the blockchain - fees are sponsored via wallet backend
 - **Social Authentication**: Support for Google, Twitter, Discord, and GitHub login methods
 
-## Tech Stack
+---
 
-- **Framework**: Next.js 15 with App Router
-- **Frontend**: React 19, TypeScript, Tailwind CSS
-- **Animations**: Framer Motion
-- **State Management**: Zustand
-- **Data Fetching**: TanStack Query
-- **Web3**: Wagmi, Viem, Ethers.js
-- **Wallet Integration**: Human Wallet SDK
-- **Identity Verification**: Human Passport
+## How It Works
 
-## Prerequisites
+### 1. ECDSA Secp256k1 Smart Contract Wallet
 
-- Node.js 18+ 
-- pnpm (recommended) or npm/yarn
-- A Human Passport API key and scorer ID from [Passport Dashboard](https://developer.passport.xyz)
-- A WalletConnect project ID from [Reown Cloud](https://cloud.reown.com/sign-in)
+WaaP deploys Soroban smart contract wallets that are controlled by the user's existing Ethereum/secp256k1 key. This enables seamless onboarding of users to Stellar with the embedded UX.
 
-## Getting Started
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd passport
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   # or
-   npm install
-   # or
-   yarn install
-   ```
-
-3. **Set up environment variables**
-   
-   Copy the example environment file and fill in your values:
-   ```bash
-   cp .env.example .env.local
-   ```
-
-   Required environment variables:
-   - `NEXT_PUBLIC_API_KEY`: Your Human Passport API key (get from [Passport Dashboard](https://developer.passport.xyz))
-   - `NEXT_PUBLIC_SCORER_ID`: Your Human Passport scorer ID (get from [Passport Dashboard](https://developer.passport.xyz))
-   - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`: Your WalletConnect project ID (get from [Reown Cloud](https://cloud.reown.com/sign-in))
-
-4. **Run the development server**
-   ```bash
-   pnpm dev
-   # or
-   npm run dev
-   # or
-   yarn dev
-   ```
-
-5. **Open your browser**
-   
-   Navigate to [http://localhost:3000](http://localhost:3000) to see the application.
-
-## Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `NEXT_PUBLIC_API_KEY` | Human Passport API key for score verification | Yes |
-| `NEXT_PUBLIC_SCORER_ID` | Human Passport scorer ID for your application | Yes |
-| `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | WalletConnect project ID for wallet connections | Yes |
-
-## Configuration
-
-The application can be configured through `src/config/index.ts`:
-
-- **Passport Score Threshold**: Minimum score required for verification (default: 25)
-- **Human Wallet Environment**: Toggle between staging and production Human Wallet environments
-- **Allowed Socials**: Configure which social login methods are available
-- **Authentication Methods**: Configure available authentication options
-
-## Project Structure
+**Architecture:**
 
 ```
-src/
-├── app/                    # Next.js app router pages
-├── components/             # Reusable React components
-├── config/                 # Application configuration
-├── hooks/                  # Custom React hooks
-├── store/                  # Zustand state management
-├── types/                  # TypeScript type definitions
-├── utils/                  # Utility functions
-└── wagmi.ts               # Wagmi configuration
+┌─────────────────────────────────────────────────────────────────┐
+│                     Factory Contract                           │
+│  (ECDSA Secp256k1 Factory - deployed once per network)         │
+│                                                                 │
+│  • Stores WASM hash of wallet contract                         │
+│  • Tracks all deployed wallets by Ethereum address             │
+│  • deploy(salt, publicKey) → deploys new wallet instance       │
+└────────────────────────────────────────────────────────────────┘
+                              │
+                              │ deploys
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Wallet Contract                            │
+│  (One per user - controlled by their secp256k1 key)            │
+│                                                                 │
+│  • Stores owner's 65-byte uncompressed public key              │
+│  • __check_auth() validates Ethereum-style signatures          │
+│  • Supports EIP-191 personal_sign message format               │
+│  • Can receive/send tokens and interact with Soroban dApps     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Key Components
+**Signature Verification:**
 
-- **PassportScoreWidget**: Human Passport integration for identity verification
-- **HumanWalletStore**: Zustand store managing Human Wallet connections
-- **ChainSwitcher**: Component for switching between Ethereum networks
-- **Header**: Application navigation and user interface
+The wallet contract verifies signatures using Ethereum's `personal_sign` format:
 
-## Scripts
+1. The Soroban auth hash is computed from the transaction context
+2. The user signs the message `"auth hash: <hex>"` using their Ethereum wallet
+3. The contract reconstructs the EIP-191 prefixed message: `"\x19Ethereum Signed Message:\n75auth hash: <hex>"`
+4. Keccak-256 hash is computed and the public key is recovered via `secp256k1_recover`
+5. The recovered key is compared against the stored owner's public key
 
-- `pnpm dev` - Start development server with Turbopack
-- `pnpm build` - Build the application for production
-- `pnpm start` - Start production server
-- `pnpm lint` - Run ESLint for code quality
+**Source Code:**
+- [Factory Contract](./contracts/contract-ecdsa-secp256k1-factory/src/lib.rs)
+- [Wallet Contract](./contracts/contract-ecdsa-secp256k1/src/lib.rs)
 
-## Development
+---
 
-This project uses:
-- **ESLint** for code linting with Prettier integration
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **Turbopack** for fast development builds
+### 2. Integration with Wallet Backend for Gasless Transactions
 
-## API Integration
+Users can interact with Stellar without holding XLM through the Wallet Backend service, which sponsors transaction fees.
 
-### Human Passport API
-The application integrates with Human Passport to verify user humanity scores:
-- **Endpoint**: `https://api.passport.xyz/v2/stamps/{scorerId}/score/{address}`
-- **Authentication**: X-API-KEY header
-- **Threshold**: Configurable minimum score for verification
-- **Get API Key**: [Passport Dashboard](https://developer.passport.xyz)
+**Flow:**
 
-### Human Wallet SDK
-Uses Human.tech's Human Wallet SDK for:
-- User authentication
-- Wallet connections
-- Message signing
-- Chain switching
-- **Documentation**: [Human Wallet Docs](https://docs.wallet.human.tech/)
+```
+┌───────────┐    1. Build & Sign Auth    ┌───────────────┐
+│   User    │ ──────────────────────────▶│   Frontend    │
+│  (WaaP)   │                            │   (Next.js)   │
+└───────────┘                            └───────┬───────┘
+                                                 │
+                    2. Simulate & prepare tx     │
+                                                 ▼
+                                         ┌───────────────┐
+                    3. Sign transaction  │  Internal API │
+                         on server       │  (/api/...)   │
+                                         └───────┬───────┘
+                                                 │
+                    4. Create fee-bump tx        │
+                                                 ▼
+                                         ┌───────────────┐
+                    5. Sponsor signs     │Wallet Backend │
+                         fee-bump        │   (Railway)   │
+                                         └───────┬───────┘
+                                                 │
+                    6. Submit to network         │
+                                                 ▼
+                                         ┌───────────────┐
+                                         │   Horizon /   │
+                                         │  Soroban RPC  │
+                                         └───────────────┘
+```
 
-## Deployment
+**Key Components:**
 
-The application can be deployed on any platform that supports Next.js:
+| Component | Purpose |
+|-----------|---------|
+| `walletBackendHelpers.ts` | Handles transaction building, simulation, and fee-bump creation |
+| `/api/wallet-backend/tx/sign` | Server-side transaction signing |
+| `/api/wallet-backend/tx/create-fee-bump` | Creates fee-bump transactions via wallet backend |
+| `/api/wallet-backend/account/register` | Registers accounts for sponsorship |
 
-### Vercel (Recommended)
-1. Connect your repository to Vercel
-2. Add environment variables in the Vercel dashboard
-3. Deploy automatically on git push
+**How Fee Sponsorship Works:**
 
-### Other Platforms
-- Follow standard Next.js deployment procedures
-- Ensure environment variables are properly configured
-- Run `pnpm build` to generate production build
+1. **Transaction Building**: The frontend builds a Soroban transaction with the user's contract wallet as the source
+2. **Simulation**: The transaction is simulated to compute required resources
+3. **Auth Signing**: The user signs the authorization payload with their Ethereum wallet
+4. **Server Signing**: The source account signs the assembled transaction server-side
+5. **Fee-Bump Creation**: The wallet backend wraps the transaction in a fee-bump, paying the fees with its own account
+6. **Submission**: The fee-bumped transaction is submitted to Horizon
 
-## Contributing
+**Source Code:**
+- [Wallet Backend Helpers](./src/lib/walletBackendHelpers.ts)
+- [Fee-Bump API Route](./src/app/api/wallet-backend/tx/create-fee-bump/route.ts)
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run linting and type checks
-5. Submit a pull request
+## Integration with Human ID
 
+Human ID offers sybil resistance through privacy-preserving KYC. This privacy-preserving attestation is then minted as a SBT on Stellar.
 
-## Support
-
-For support and questions:
-- Visit [Human.tech](https://human.tech)
-- Check the [Human Passport Documentation](https://docs.passport.xyz/) for comprehensive guides and tutorials
-- Review the [Human Wallet Documentation](https://docs.wallet.human.tech/)
-- Access the [Passport Dashboard](https://developer.passport.xyz) for API keys and scorer management
+More info about Human ID on Stellar: https://docs.holonym.id/stellar
