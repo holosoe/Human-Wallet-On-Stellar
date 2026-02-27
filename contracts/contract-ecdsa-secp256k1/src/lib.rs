@@ -23,7 +23,7 @@ pub enum Error {
     Secp256k1VerifyFailed = 3,
 }
 
-const STORAGE_KEY_PK: Symbol = symbol_short!("pk");
+const STORAGE_KEY_ETH_ADDRESS: Symbol = symbol_short!("ethaddr");
 
 #[contractimpl]
 impl EcdsaAccount {
@@ -40,13 +40,13 @@ impl EcdsaAccount {
             .extend_ttl_for_contract_instance(contract_address.clone(), max_ttl, max_ttl);
     }
 
-    // Initialize the contract with an owner's secp256k1 public key (uncompressed, 65 bytes).
-    pub fn init(env: Env, public_key: BytesN<65>) -> Result<(), Error> {
-        if env.storage().instance().has(&STORAGE_KEY_PK) {
+    // Initialize the contract with an owner's Ethereum address (20 bytes).
+    pub fn init(env: Env, eth_address: BytesN<20>) -> Result<(), Error> {
+        if env.storage().instance().has(&STORAGE_KEY_ETH_ADDRESS) {
             return Err(Error::AlreadyInited);
         }
 
-        env.storage().instance().set(&STORAGE_KEY_PK, &public_key);
+        env.storage().instance().set(&STORAGE_KEY_ETH_ADDRESS, &eth_address);
 
         Self::extend_ttl(env);
 
@@ -77,10 +77,10 @@ impl EcdsaAccount {
         signature: BytesN<65>,
         _auth_context: Vec<Context>,
     ) -> Result<(), Error> {
-        let stored_public_key: BytesN<65> = env
+        let stored_eth_address: BytesN<20> = env
             .storage()
             .instance()
-            .get(&STORAGE_KEY_PK)
+            .get(&STORAGE_KEY_ETH_ADDRESS)
             .ok_or(Error::NotInited)?;
 
         // Extract the signature (first 64 bytes) and recovery_id (last byte)
@@ -91,136 +91,24 @@ impl EcdsaAccount {
         let recovery_id = signature_array[64] as u32;
 
         // For personal_sign, we need to reconstruct the Ethereum message prefix
-        // The signature was created from: "\x19Ethereum Signed Message:\n" + length + "auth hash: " + hex_string
+        // Format: "\x19Ethereum Signed Message:\n75auth hash: <64 hex characters>"
         let payload_array = signature_payload.to_array();
+        let mut message_bytes = [0u8; 103]; // 26 prefix + 2 length + 11 "auth hash: " + 64 hex
 
-        // Convert the 32-byte payload to a hex string (64 characters)
-        let mut hex_string = [0u8; 64];
-        for i in 0..32 {
-            let byte = payload_array[i];
-            let high_nibble = (byte >> 4) & 0x0F;
-            let low_nibble = byte & 0x0F;
-
-            // Convert to ASCII hex characters
-            hex_string[i * 2] = if high_nibble < 10 {
-                high_nibble + 0x30
-            } else {
-                high_nibble - 10 + 0x61
-            };
-            hex_string[i * 2 + 1] = if low_nibble < 10 {
-                low_nibble + 0x30
-            } else {
-                low_nibble - 10 + 0x61
-            };
-        }
-
-        // Create the message string: "auth hash: " + hex_string (11 + 64 = 75 characters)
-        let mut message_string = [0u8; 75];
-        let mut msg_index = 0;
-
-        // Add "auth hash: "
-        message_string[msg_index] = 0x61;
-        msg_index += 1; // a
-        message_string[msg_index] = 0x75;
-        msg_index += 1; // u
-        message_string[msg_index] = 0x74;
-        msg_index += 1; // t
-        message_string[msg_index] = 0x68;
-        msg_index += 1; // h
-        message_string[msg_index] = 0x20;
-        msg_index += 1; // space
-        message_string[msg_index] = 0x68;
-        msg_index += 1; // h
-        message_string[msg_index] = 0x61;
-        msg_index += 1; // a
-        message_string[msg_index] = 0x73;
-        msg_index += 1; // s
-        message_string[msg_index] = 0x68;
-        msg_index += 1; // h
-        message_string[msg_index] = 0x3a;
-        msg_index += 1; // :
-        message_string[msg_index] = 0x20;
-        msg_index += 1; // space
+        // Add the prefix
+        let prefix = b"\x19Ethereum Signed Message:\n75auth hash: ";
+        message_bytes[..39].copy_from_slice(prefix);
 
         // Add the hex string
-        for i in 0..64 {
-            message_string[msg_index] = hex_string[i];
-            msg_index += 1;
-        }
-
-        // Create the Ethereum message prefix
-        // Format: "\x19Ethereum Signed Message:\n" + length + message_string
-        let mut message_bytes = [0u8; 109]; // 26 prefix + 2 length + 75 message_string
-        let mut index = 0;
-
-        // Add the prefix: "\x19Ethereum Signed Message:\n"
-        message_bytes[index] = 0x19;
-        index += 1; // \x19
-        message_bytes[index] = 0x45;
-        index += 1; // E
-        message_bytes[index] = 0x74;
-        index += 1; // t
-        message_bytes[index] = 0x68;
-        index += 1; // h
-        message_bytes[index] = 0x65;
-        index += 1; // e
-        message_bytes[index] = 0x72;
-        index += 1; // r
-        message_bytes[index] = 0x65;
-        index += 1; // e
-        message_bytes[index] = 0x75;
-        index += 1; // u
-        message_bytes[index] = 0x6d;
-        index += 1; // m
-        message_bytes[index] = 0x20;
-        index += 1; // space
-        message_bytes[index] = 0x53;
-        index += 1; // S
-        message_bytes[index] = 0x69;
-        index += 1; // i
-        message_bytes[index] = 0x67;
-        index += 1; // g
-        message_bytes[index] = 0x6e;
-        index += 1; // n
-        message_bytes[index] = 0x65;
-        index += 1; // e
-        message_bytes[index] = 0x64;
-        index += 1; // d
-        message_bytes[index] = 0x20;
-        index += 1; // space
-        message_bytes[index] = 0x4d;
-        index += 1; // M
-        message_bytes[index] = 0x65;
-        index += 1; // e
-        message_bytes[index] = 0x73;
-        index += 1; // s
-        message_bytes[index] = 0x73;
-        index += 1; // s
-        message_bytes[index] = 0x61;
-        index += 1; // a
-        message_bytes[index] = 0x67;
-        index += 1; // g
-        message_bytes[index] = 0x65;
-        index += 1; // e
-        message_bytes[index] = 0x3a;
-        index += 1; // :
-        message_bytes[index] = 0x0a;
-        index += 1; // \n
-
-        // Add the length as ASCII string (75 = "75")
-        message_bytes[index] = 0x37;
-        index += 1; // "7"
-        message_bytes[index] = 0x35;
-        index += 1; // "5"
-
-        // Add the message string (75 characters)
-        for i in 0..75 {
-            message_bytes[index] = message_string[i];
-            index += 1;
+        const HEX_CHARS: &[u8; 16] = b"0123456789abcdef";
+        for i in 0..32 {
+            let byte = payload_array[i];
+            message_bytes[39 + i * 2] = HEX_CHARS[(byte >> 4) as usize];
+            message_bytes[39 + i * 2 + 1] = HEX_CHARS[(byte & 0x0F) as usize];
         }
 
         // Create Bytes from the array
-        let message = Bytes::from_slice(&env, &message_bytes[..index]);
+        let message = Bytes::from_slice(&env, &message_bytes);
 
         // Hash the complete message with Keccak-256 (same as Ethereum)
         let message_hash = env.crypto().keccak256(&message);
@@ -230,14 +118,23 @@ impl EcdsaAccount {
             env.crypto()
                 .secp256k1_recover(&message_hash, &signature_bytes, recovery_id);
 
-        // Verify that the recovered public key matches the stored public key
-        // Both are now uncompressed (65 bytes), so we can compare directly
+        // Verify that the recovered public key matches the stored Ethereum address
+        // The uncompressed public key is 65 bytes (0x04 format byte + 64 bytes)
         let recovered_array = recovered_public_key.to_array();
-        let stored_array = stored_public_key.to_array();
 
-        // Direct comparison of uncompressed public keys
-        if recovered_array != stored_array {
-            return Err(Error::Secp256k1VerifyFailed);
+        // Extract the 64 bytes of the public key (skip the 0x04 format byte)
+        let pk_hash = env.crypto().keccak256(&Bytes::from_slice(&env, &recovered_array[1..65]));
+        let pk_hash_array = pk_hash.to_array();
+
+        // Extract the last 20 bytes for the Ethereum address
+        let mut recovered_address = [0u8; 20];
+        recovered_address.copy_from_slice(&pk_hash_array[12..32]);
+
+        let stored_array = stored_eth_address.to_array();
+
+        // Direct comparison
+        if recovered_address != stored_array {
+            panic!("Mismatch! Recovered: {:?}, Stored: {:?}", recovered_address, stored_array);
         }
 
         Self::extend_ttl(env);

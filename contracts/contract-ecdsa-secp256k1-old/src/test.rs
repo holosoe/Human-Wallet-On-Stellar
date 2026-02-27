@@ -3,7 +3,7 @@ extern crate std;
 
 use k256::ecdsa::{SigningKey, VerifyingKey, signature::Signer};
 use k256::elliptic_curve::rand_core::OsRng;
-use soroban_sdk::{testutils::{BytesN as _, Logs}, BytesN, Env, vec, Error, Bytes};
+use soroban_sdk::{testutils::BytesN as _, BytesN, Env, vec, Error, Bytes};
 use crate::EcdsaAccount;
 use crate::EcdsaAccountClient;
 
@@ -18,40 +18,31 @@ fn test_eth_compat_signature() {
     
     // Get the uncompressed public key (65 bytes) - same format as Ethereum
     let public_key_bytes: [u8; 65] = verifying_key.to_encoded_point(false).as_bytes().try_into().unwrap();
-    let mut pk_bytes = [0u8; 64];
-    pk_bytes.copy_from_slice(&public_key_bytes[1..65]);
-    
-    // Keccak256 hash the public key
-    let pk_hash = env.crypto().keccak256(&Bytes::from_slice(&env, &pk_bytes));
-    let pk_hash_array = pk_hash.to_array();
-    
-    // Extract the 20-byte Ethereum address
-    let mut eth_address_bytes = [0u8; 20];
-    eth_address_bytes.copy_from_slice(&pk_hash_array[12..32]);
-    let eth_address = BytesN::from_array(&env, &eth_address_bytes);
-    
-    account_contract.init(&eth_address);
+    let public_key = BytesN::from_array(&env, &public_key_bytes);
+    account_contract.init(&public_key);
 
     // Create a random 32-byte payload (like an Ethereum message hash)
     let payload = BytesN::<32>::random(&env);
     let payload_bytes = payload.to_array();
 
-    // Convert the 32-byte payload to a hex string (64 characters)
-    let mut hex_string = [0u8; 64];
+    // Convert the 32-byte payload to a hex string (66 characters including 0x prefix)
+    let mut hex_string = [0u8; 66];
+    hex_string[0] = 0x30; // '0'
+    hex_string[1] = 0x78; // 'x'
     for i in 0..32 {
         let byte = payload_bytes[i];
         let high_nibble = (byte >> 4) & 0x0F;
         let low_nibble = byte & 0x0F;
         
         // Convert to ASCII hex characters
-        hex_string[i * 2] = if high_nibble < 10 { high_nibble + 0x30 } else { high_nibble - 10 + 0x61 };
-        hex_string[i * 2 + 1] = if low_nibble < 10 { low_nibble + 0x30 } else { low_nibble - 10 + 0x61 };
+        hex_string[i * 2 + 2] = if high_nibble < 10 { high_nibble + 0x30 } else { high_nibble - 10 + 0x61 };
+        hex_string[i * 2 + 3] = if low_nibble < 10 { low_nibble + 0x30 } else { low_nibble - 10 + 0x61 };
     }
 
-    // Construct the Ethereum personal_sign message: "\x19Ethereum Signed Message:\n75auth hash: " + hex_string
-    let mut message_bytes = [0u8; 103];
+    // Construct the Ethereum personal_sign message: "\x19Ethereum Signed Message:\n66" + hex_string
+    let mut message_bytes = [0u8; 26 + 2 + 66];
     let mut idx = 0;
-    let prefix = b"\x19Ethereum Signed Message:\n75auth hash: ";
+    let prefix = b"\x19Ethereum Signed Message:\n66";
     for b in prefix.iter() { message_bytes[idx] = *b; idx += 1; }
     // Add the hex string
     for b in hex_string.iter() { message_bytes[idx] = *b; idx += 1; }
@@ -73,23 +64,12 @@ fn test_eth_compat_signature() {
     
     let signature = BytesN::from_array(&env, &eth_signature);
 
-    std::println!("Logs before check_auth:");
-    for log in env.logs().all() {
-        std::println!("{:?}", log);
-    }
-    
     // Should verify
-    let res = env.try_invoke_contract_check_auth::<Error>(
+    env.try_invoke_contract_check_auth::<Error>(
         &account_contract.address,
         &payload,
         signature.into(),
         &vec![&env],
-    );
-    
-    std::println!("Logs after check_auth:");
-    for log in env.logs().all() {
-        std::println!("{:?}", log);
-    }
-    
-    res.unwrap();
+    )
+    .unwrap();
 } 

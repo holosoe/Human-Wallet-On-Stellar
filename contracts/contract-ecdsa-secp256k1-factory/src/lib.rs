@@ -189,7 +189,7 @@ impl Contract {
         Ok(deployed_contracts.len())
     }
     
-    pub fn deploy(env: Env, salt: BytesN<32>, pk: BytesN<65>) -> Result<Address, Error> {
+    pub fn deploy(env: Env, salt: BytesN<32>, eth_address: BytesN<20>) -> Result<Address, Error> {
         // Check authorization - only owner can deploy
         Self::check_owner(&env)?;
 
@@ -200,27 +200,7 @@ impl Contract {
             .ok_or(Error::NotInited)?;
 
         let address = env.deployer().with_current_contract(salt).deploy(wasm_hash);
-        let () = env.invoke_contract(&address, &symbol_short!("init"), vec![&env, pk.to_val()]);
-
-        // Derive Ethereum address from public key (standard 20-byte address)
-        // Remove the 0x04 prefix (first byte) to get the 64-byte public key
-        let mut pubkey_array = [0u8; 64];
-        for i in 0..64 {
-            pubkey_array[i] = pk.get((i + 1).try_into().unwrap()).unwrap().try_into().unwrap();
-        }
-        
-        // Convert to Bytes for hashing
-        let pubkey_bytes = Bytes::from_array(&pk.env(), &pubkey_array);
-        
-        // Hash with Keccak-256
-        let hash = pk.env().crypto().keccak256(&pubkey_bytes);
-        
-        // Take the last 20 bytes for Ethereum address
-        let mut eth_address_array = [0u8; 20];
-        for i in 0..20 {
-            eth_address_array[i] = hash.to_array()[i + 12];
-        }
-        let eth_address = BytesN::from_array(&pk.env(), &eth_address_array);
+        let () = env.invoke_contract(&address, &symbol_short!("init"), vec![&env, eth_address.to_val()]);
 
         // Track the deployed contract
         let mut deployed_contracts = env
