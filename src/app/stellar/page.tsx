@@ -32,6 +32,9 @@ export default function HumanWalletPage() {
     useState(false);
   const [lastTransactionHash, setLastTransactionHash] = useState<string>("");
   const [isRequestingFaucet, setIsRequestingFaucet] = useState(false);
+  const [disbursements, setDisbursements] = useState<any[]>([]);
+  const [isLoadingDisbursements, setIsLoadingDisbursements] = useState(false);
+  const [redeemingDisbursements, setRedeemingDisbursements] = useState<Record<string, boolean>>({});
 
   const notify = useToast();
 
@@ -54,8 +57,25 @@ export default function HumanWalletPage() {
 
     if (isConnected && address && hasCheckedExistingDeployment) {
       handleCheckContractBalance();
+      fetchDisbursements();
     }
   }, [isConnected, address, hasCheckedExistingDeployment]);
+
+  const fetchDisbursements = async () => {
+    if (!address) return;
+    setIsLoadingDisbursements(true);
+    try {
+      const response = await fetch(`/api/user/disbursements?ethAddress=${address}`);
+      if (response.ok) {
+        const data = await response.json();
+        setDisbursements(data.disbursements || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch disbursements", e);
+    } finally {
+      setIsLoadingDisbursements(false);
+    }
+  };
 
   const checkExistingDeploymentOnLoad = async () => {
     if (!address) return;
@@ -140,76 +160,19 @@ export default function HumanWalletPage() {
   };
 
   const handleDeployEcdsaContract = async () => {
-    if (!isConnected) {
+    if (!isConnected || !address) {
       notify("error", "Please connect your wallet first");
       return;
     }
 
-    // If user hasn't signed yet, sign and then deploy automatically
-    if (!recoveredPublicKey) {
-      setIsDeployingContract(true);
-      try {
-        // Sign the message first
-        const sig = await signMessage(
-          process.env.NEXT_PUBLIC_WALLET_DEPLOY_MESSAGE!,
-        );
-        setSignature(sig);
-
-        // Recover the public key from the signature
-        const messageHash = ethers.hashMessage(
-          process.env.NEXT_PUBLIC_WALLET_DEPLOY_MESSAGE!,
-        );
-        const publicKey = ethers.SigningKey.recoverPublicKey(messageHash, sig);
-        setRecoveredPublicKey(publicKey);
-
-        console.log("Recovered public key:", publicKey);
-        notify("success", "Message signed successfully! Deploying contract...");
-
-        // Immediately deploy the contract after signing
-        const response = await fetch("/api/wallet/deploy", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ signature: sig }),
-        });
-
-        if (!response.ok) {
-          notify("error", "Failed to deploy ECDSA contract");
-          return;
-        }
-
-        const result = await response.json();
-        console.log("Deploy response:", result);
-
-        if (result.success && result.contractAddress) {
-          setWalletContractAddress(result.contractAddress);
-          notify("success", "Contract deployed successfully!");
-        }
-
-        // Automatically check balance after deployment
-        setTimeout(() => {
-          handleCheckContractBalance();
-        }, 1000);
-      } catch (error) {
-        console.error("Sign and deploy error:", error);
-        notify("error", "Failed to sign message or deploy contract");
-      } finally {
-        setIsDeployingContract(false);
-      }
-      return;
-    }
-
-    // If user has already signed, just deploy
     setIsDeployingContract(true);
     try {
-      // call api/wallet/deploy with signature
       const response = await fetch("/api/wallet/deploy", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ signature }),
+        body: JSON.stringify({ ethAddress: address }),
       });
 
       if (!response.ok) {
@@ -458,6 +421,51 @@ export default function HumanWalletPage() {
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
   };
 
+  const handleRedeemDisbursement = async (disbursementId: string, amount: string) => {
+    if (!isConnected) {
+      notify("error", "Please connect your wallet first");
+      return;
+    }
+    
+    setRedeemingDisbursements(prev => ({ ...prev, [disbursementId]: true }));
+    try {
+      const message = `Redeem disbursement ${disbursementId} for amount ${amount} XLM`;
+      // Hex-encode the message exactly as the mobile app does — WaaP's personal_sign
+      // expects params[0] to be a 0x-prefixed hex string, not a raw UTF-8 string.
+      const msgHex = "0x" + Buffer.from(message).toString("hex");
+      const signedMessage = await signMessage(msgHex);
+
+      const response = await fetch("/api/wallet/redeem", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          disbursementId,
+          signature: signedMessage,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        notify("error", `Redemption failed: ${result.error || "Unknown error"}`);
+        return;
+      }
+
+      notify("success", `Successfully redeemed ${amount} XLM!`);
+      fetchDisbursements(); // Refresh
+      handleCheckContractBalance(); // Refresh balance
+      setLastTransactionHash(result.transactionHash);
+
+    } catch (error: any) {
+      console.error("Error redeeming:", error);
+      notify("error", `Error: ${error?.message || "Failed to sign or redeem"}`);
+    } finally {
+      setRedeemingDisbursements(prev => ({ ...prev, [disbursementId]: false }));
+    }
+  };
+
   return (
     <RootStyle>
       <div className="flex flex-col h-full p-6 space-y-6 overflow-auto scrollbar-hide">
@@ -666,8 +674,8 @@ export default function HumanWalletPage() {
                       whileTap={!isDeployingContract ? { scale: 0.98 } : {}}
                     >
                       {isDeployingContract
-                        ? "Signing & Deploying..."
-                        : "Sign & Deploy ECDSA SCW"}
+                        ? "Deploying..."
+                        : "Deploy ECDSA SCW"}
                     </motion.button>
                   )}
 
@@ -862,6 +870,71 @@ export default function HumanWalletPage() {
                             ? "Voting..."
                             : "Vote with ECDSA SCW"}
                       </motion.button>
+                    </div>
+                  )}
+
+                  {/* Disbursements Section */}
+                  {walletContractAddress && disbursements.length > 0 && (
+                    <div className="space-y-4 mt-8 pt-6 border-t border-gray-100">
+                      <h3 className="text-[16px] font-medium mb-2 mt-4 flex justify-between items-center">
+                        <span>Disbursements</span>
+                        <motion.button 
+                          onClick={fetchDisbursements}
+                          disabled={isLoadingDisbursements}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          className="text-gray-500 hover:text-gray-700 cursor-pointer"
+                        >
+                          <svg className={`w-4 h-4 ${isLoadingDisbursements ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                        </motion.button>
+                      </h3>
+                      
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="flex justify-between mb-4">
+                           <div className="text-center">
+                             <div className="text-xs text-gray-500 uppercase font-semibold">Total Pending</div>
+                             <div className="text-lg font-bold text-orange-500">
+                               {disbursements.filter(d => !d.txHash).reduce((acc, curr) => acc + Number(curr.amount), 0).toFixed(2)} XLM
+                             </div>
+                           </div>
+                           <div className="text-center">
+                             <div className="text-xs text-gray-500 uppercase font-semibold">Total Redeemed</div>
+                             <div className="text-lg font-bold text-green-500">
+                               {disbursements.filter(d => d.txHash).reduce((acc, curr) => acc + Number(curr.amount), 0).toFixed(2)} XLM
+                             </div>
+                           </div>
+                        </div>
+
+                        <div className="space-y-2 mt-4">
+                          {disbursements.map((d) => (
+                            <div key={d.id} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-md shadow-sm">
+                              <div>
+                                <div className="font-medium text-sm">{d.amount} XLM</div>
+                                <div className="text-xs text-gray-400">
+                                  {new Date(d.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
+                              <div>
+                                {d.txHash ? (
+                                  <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Redeemed</span>
+                                ) : (
+                                  <motion.button
+                                    onClick={() => handleRedeemDisbursement(d.id, d.amount)}
+                                    disabled={redeemingDisbursements[d.id]}
+                                    className="text-xs px-3 py-1.5 bg-orange-500 text-white rounded font-medium disabled:opacity-50 cursor-pointer"
+                                    whileHover={!redeemingDisbursements[d.id] ? { scale: 1.05 } : {}}
+                                    whileTap={!redeemingDisbursements[d.id] ? { scale: 0.95 } : {}}
+                                  >
+                                    {redeemingDisbursements[d.id] ? "Claiming..." : "Claim"}
+                                  </motion.button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>

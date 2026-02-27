@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     const sourceAccount = await rpc.getAccount(faucetPublicKey);
     
     const tx = new TransactionBuilder(sourceAccount, {
-      fee: '10000000', // 1 XLM base fee to ensure mainnet acceptance
+      fee: '1000', // 1 XLM base fee to ensure mainnet acceptance
       networkPassphrase: networkPassphrase
     })
       .addOperation(Operation.invokeContractFunction({

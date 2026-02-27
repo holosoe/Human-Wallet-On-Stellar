@@ -7,26 +7,14 @@ import { checkContractExists } from "@/lib/contract";
 
 export async function POST(request: NextRequest) {
   try {
-    const { signature } = await request.json();
+    const { ethAddress } = await request.json();
 
-    if (!signature) {
+    if (!ethAddress) {
       return NextResponse.json(
-        { error: "signature is required" },
+        { error: "ethAddress is required" },
         { status: 400 },
       );
     }
-
-    // recover public key from signature
-    const messageHash = ethers.hashMessage(
-      process.env.NEXT_PUBLIC_WALLET_DEPLOY_MESSAGE!,
-    );
-    const publicKey = ethers.SigningKey.recoverPublicKey(
-      messageHash,
-      signature,
-    );
-
-    // get ethAddress from public key
-    const ethAddress = ethers.computeAddress(publicKey);
 
     // Validate the Ethereum address format
     if (!ethAddress.startsWith("0x") || ethAddress.length !== 42) {
@@ -115,14 +103,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`Computed contract address: ${contractAddress}`);
 
-    // debug log
-    console.log(`Deployer address: ${deployerAddress}`);
-    console.log(`Deterministic salt: ${deterministicSalt}`);
-    console.log(`Contract address: ${contractAddress}`);
-    console.log(`Public key: ${publicKey}`);
-    console.log(`ETH address: ${ethAddress}`);
-
-    // Check if contract already exists using checkContractExists function
+    // Check if contract already exists
     const exists = await checkContractExists(contractAddress);
     if (exists) {
       console.log(`Contract already exists at: ${contractAddress}`);
@@ -133,18 +114,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Convert public key from hex string to Buffer
-    const publicKeyHex = publicKey.startsWith("0x")
-      ? publicKey.slice(2)
-      : publicKey;
-    if (publicKeyHex.length !== 130) {
-      // 65 bytes = 130 hex chars
-      return NextResponse.json(
-        { error: "Invalid public key format. Must be 65-byte hex string." },
-        { status: 400 },
-      );
-    }
-    const publicKeyBuffer = Buffer.from(publicKeyHex, "hex");
+    // debug log
+    console.log(`Deployer address: ${deployerAddress}`);
+    console.log(`Deterministic salt: ${deterministicSalt}`);
+    console.log(`Contract address: ${contractAddress}`);
+    console.log(`ETH address: ${ethAddress}`);
 
     // Build the deployment transaction
     const { transaction } = await buildTransaction(
@@ -152,7 +126,7 @@ export async function POST(request: NextRequest) {
       "deploy",
       [
         xdr.ScVal.scvBytes(deterministicSalt),
-        xdr.ScVal.scvBytes(publicKeyBuffer),
+        xdr.ScVal.scvBytes(ethAddressBuffer),
       ],
     );
 
@@ -165,6 +139,9 @@ export async function POST(request: NextRequest) {
 
     // Send the transaction
     const result = await sendTransaction(transaction);
+    if (!result) {
+      return NextResponse.json({ error: "Transaction returned no result" }, { status: 500 });
+    }
 
     console.log(`✅ Contract deployed successfully: ${contractAddress}`);
     console.log(`Transaction hash: ${result.hash}`);
@@ -175,12 +152,12 @@ export async function POST(request: NextRequest) {
       transactionHash: result.hash,
       message: "Contract deployed successfully",
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Deployment error:", error);
     return NextResponse.json(
       {
         error: "Deployment failed",
-        details: error instanceof Error ? error.message : String(error),
+        details: error instanceof Error ? error.message : JSON.stringify(error, Object.getOwnPropertyNames(error)),
       },
       { status: 500 },
     );

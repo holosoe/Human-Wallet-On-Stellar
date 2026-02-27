@@ -32,15 +32,24 @@ export async function buildTransaction(
 
     const transaction = SorobanRpc.assembleTransaction(simTxn, sim).setTimeout(0).build()
 
-    // Check if this transaction requires ECDSA authentication
-    if (sim.result?.auth && sim.result.auth.length > 0) {
-        // This is an ECDSA-authenticated transaction (like voting)
-        const auth = sim.result.auth[0]
+    // Check if this transaction requires ECDSA authentication.
+    // Only enter ECDSA path if the auth credential type is sorobanCredentialsAddress
+    // (i.e. an ECDSA contract wallet). Regular keypair-sourced transactions produce
+    // sorobanCredentialsSourceAccount auth and don't need this path.
+    const auth = sim.result?.auth?.[0];
+    const isEcdsaAuth = auth &&
+        auth.credentials().switch().value ===
+        xdr.SorobanCredentialsType.sorobanCredentialsAddress().value;
+
+    if (isEcdsaAuth) {
+        // ECDSA-authenticated transaction (like voting from proxy contract)
+        const nonce = auth.credentials().address().nonce();
+
         const authHash = hash(
             xdr.HashIdPreimage.envelopeTypeSorobanAuthorization(
                 new xdr.HashIdPreimageSorobanAuthorization({
                     networkId: hash(Buffer.from(process.env.NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE!, 'utf-8')),
-                    nonce: auth.credentials().address().nonce(),
+                    nonce,
                     signatureExpirationLedger: lastLedger + 100,
                     invocation: auth.rootInvocation()
                 })
@@ -53,7 +62,7 @@ export async function buildTransaction(
             lastLedger
         }
     } else {
-        // This is a regular transaction (like deployment)
+        // Regular transaction (deployment, native transfers from keypair, etc.)
         return {
             transaction,
             simulation: sim
